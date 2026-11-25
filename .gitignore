@@ -1,1 +1,11 @@
 .DS_Store
+/artifacts/video/
+/submission/
+
+# Local review artifacts and credentials
+/artifacts/demo-frame.png
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks

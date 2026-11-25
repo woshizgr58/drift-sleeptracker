@@ -1,20 +1,428 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content>
+  <main class="shell">
+    <header class="brand">
+      <a href="/home" aria-label="Drift home"
+        ><span class="brand-mark"><ion-icon name="moon-outline" /></span>
+        drift<span class="brand-dot">.</span></a
+      >
+    </header>
+    @if (sleep.error()) {
+    <div class="error" role="alert">
+      {{ sleep.error() }} <button (click)="sleep.load()">Retry</button>
+    </div>
+    } @if (!sleep.ready() && !sleep.error()) {
+    <p role="status">Opening your journal…</p>
+    } @if (tab() === 'today') {
+    <section class="page-heading">
+      <p class="eyebrow">{{ today | date:'EEEE, MMMM d' }}</p>
+      <h1>Sleep overview</h1>
+    </section>
+    <section class="night-card" aria-label="Latest overnight sleep">
+      <div class="night-copy">
+        <p class="eyebrow">
+          <ion-icon name="moon-outline" /> {{ latest() ? 'LATEST NIGHT' :
+          'OVERNIGHT SLEEP' }}
+        </p>
+        <h2>{{ latest() ? hours(duration(latest()!)) : 'No sleep logged' }}</h2>
+        <p>
+          {{ latest() ? (latest()!.end | date:'EEE, MMM d') + ' · ' + 'Goal: ' +
+          sleep.goal() + 'h' : 'Add your bedtime and wake-up time.' }}
+        </p>
+        <button
+          class="light-button"
+          (click)="open('night')"
+          [disabled]="!sleep.ready()"
+        >
+          <ion-icon name="add-outline" /> Log a night
+          <ion-icon name="arrow-forward-outline" />
+        </button>
+      </div>
+      <div class="moon-scene" aria-hidden="true">
+        <span class="star s1">✦</span><span class="star s2">✧</span
+        ><span class="star s3">·</span><span class="moon"></span
+        ><span class="orbit"></span>
+      </div>
+    </section>
+    <button
+      class="checkin-card"
+      (click)="open('checkin')"
+      [disabled]="!sleep.ready()"
+    >
+      <span class="sun-icon"><ion-icon name="sunny-outline" /></span
+      ><span><strong>How awake do you feel?</strong></span
+      ><ion-icon name="arrow-forward-outline" />
+    </button>
+    <section class="week-card">
+      <div class="section-title">
+        <div>
+          <h2>This week</h2>
+        </div>
+        <span class="pill">Last 7 days</span>
+      </div>
+      <div class="week-stats">
+        <strong
+          >{{ average() ? hours(average()) : '—' }}<small
+            >average per logged day</small
+          ></strong
+        ><span>{{ daysLogged() }}<small>of 7 days logged</small></span>
+      </div>
+      <div
+        class="chart"
+        role="img"
+        aria-label="Sleep duration for each of the last seven days"
+      >
+        @for (day of week(); track $index) {
+        <div
+          class="chart-column"
+          [attr.aria-label]="day.date + ': ' + (day.hasData ? hours(day.hours) : 'not logged')"
+        >
+          <span class="chart-value"
+            >{{ day.hasData ? (day.hours | number:'1.0-1') + 'h' : '·' }}</span
+          >
+          <div class="bar-track">
+            <div
+              class="bar"
+              [class.current]="$last"
+              [style.height.%]="day.hasData ? (day.hours / 24 * 100) : 4"
+            ></div>
+          </div>
+          <span class="day" [class.current-day]="$last">{{ day.label }}</span>
+        </div>
+        }
+      </div>
+    </section>
+    <div class="section-title recent-heading">
+      <h2>Recent entries</h2>
+      <button class="text-button" (click)="tab.set('journal')">
+        View all <ion-icon name="arrow-forward-outline" />
+      </button>
+    </div>
+    @for (entry of history().slice(0, 2); track entry.id) {
+    <button class="entry" (click)="open(entry.kind, entry)">
+      <span class="entry-icon" [class.day-icon]="entry.kind === 'checkin'"
+        ><ion-icon
+          [name]="entry.kind === 'night' ? 'moon-outline' : 'sunny-outline'" /></span
+      ><span class="entry-text"
+        ><strong
+          >{{ entry.kind === 'night' ? hours(duration(entry)) + ' of rest' :
+          shortScales[entry.score! - 1] }}</strong
+        ><small
+          >{{ (entry.end || entry.start) | date:'MMM d · h:mm a' }}{{ entry.kind
+          === 'checkin' ? ' · ' + entry.score + '/7' : '' }}</small
+        ></span
+      ><ion-icon name="chevron-forward-outline" />
+    </button>
+    } @if (!sleep.entries().length) {
+    <div class="empty-small">
+      <ion-icon name="leaf-outline" />
+      <p>No entries yet.</p>
+    </div>
+    } } @if (tab() === 'journal') {
+    <section class="page-heading">
+      <h1>Journal</h1>
+      <p>Tap an entry to edit.</p>
+    </section>
+    <div class="log-actions">
+      <button
+        class="primary-button"
+        (click)="open('night')"
+        [disabled]="!sleep.ready()"
+      >
+        <ion-icon name="add-outline" /> Log a night</button
+      ><button
+        class="secondary-button"
+        (click)="open('checkin')"
+        [disabled]="!sleep.ready()"
+      >
+        <ion-icon name="sunny-outline" /> Check in
+      </button>
+    </div>
+    <div class="segmented" aria-label="Filter journal">
+      @for (item of [['all', 'All entries'], ['night', 'Nights'], ['checkin',
+      'Check-ins']]; track item[0]) {
+      <button
+        [class.selected]="filter() === item[0]"
+        [attr.aria-pressed]="filter() === item[0]"
+        (click)="filter.set(item[0])"
+      >
+        {{ item[1] }}
+      </button>
+      }
+    </div>
+    <p class="eyebrow count">
+      {{ history().length }} {{ history().length === 1 ? 'ENTRY' : 'ENTRIES' }}
+      SAVED
+    </p>
+    @for (entry of history(); track entry.id) {
+    <button class="journal-entry" (click)="open(entry.kind, entry)">
+      <div class="entry-top">
+        <span class="entry-icon" [class.day-icon]="entry.kind === 'checkin'"
+          ><ion-icon
+            [name]="entry.kind === 'night' ? 'moon-outline' : 'sunny-outline'" /></span
+        ><span class="entry-text"
+          ><small
+            >{{ (entry.end || entry.start) | date:'EEEE, MMM d, y' }}</small
+          ><strong
+            >{{ entry.kind === 'night' ? hours(duration(entry)) + ' of rest' :
+            entry.score + '/7 · ' + shortScales[entry.score! - 1] }}</strong
+          ></span
+        ><ion-icon name="chevron-forward-outline" />
+      </div>
+      @if (entry.kind === 'night') {
+      <div class="sleep-times">
+        <span
+          >BEDTIME<strong
+            >{{ entry.start | date:'MMM d, h:mm a' }}</strong
+          ></span
+        ><span class="time-line">→</span
+        ><span
+          >WAKE-UP<strong>{{ entry.end | date:'MMM d, h:mm a' }}</strong></span
+        >
+      </div>
+      } @else {
+      <p class="scale-detail">
+        {{ entry.start | date:'h:mm a' }} · {{ scales[entry.score! - 1] }}
+      </p>
+      } @if (entry.note) {
+      <p class="note">{{ entry.note }}</p>
+      }
+    </button>
+    } @empty {
+    <section class="empty">
+      <ion-icon name="moon-outline" />
+      <h2>No entries yet.</h2>
+      <p>Log sleep or add a check-in.</p>
+    </section>
+    } } @if (tab() === 'settings') {
+    <section class="page-heading">
+      <h1>Settings</h1>
+    </section>
+    <section class="settings-card">
+      <span class="setting-icon"><ion-icon name="moon-outline" /></span>
+      <h2>Sleep goal</h2>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
+      <label for="goal">Nightly sleep goal</label
+      ><select id="goal" [(ngModel)]="goal">
+        @for (value of [4,5,6,7,7.5,8,8.5,9,10,11,12]; track value) {
+        <option [ngValue]="value">{{ value }} hours</option>
+        }</select
+      ><button
+        class="primary-button"
+        (click)="saveGoal()"
+        [disabled]="busy() || !sleep.ready()"
+      >
+        Save goal
+      </button>
+    </section>
+    <section class="settings-card">
+      <span class="setting-icon peach"
+        ><ion-icon name="notifications-outline"
+      /></span>
+      <h2>Daily reminder</h2>
+      <p>Get a daily notification to log sleepiness.</p>
+      @if (reminders.native) {
+      <p class="status">
+        {{ reminders.enabled() ? 'Daily reminder is on · ' + reminders.time() :
+        'Reminders are off' }}
+      </p>
+      <label for="reminder-time">Daily check-in time</label
+      ><input
+        id="reminder-time"
+        type="time"
+        [(ngModel)]="reminderTime"
+        required
+      /><button
+        class="primary-button"
+        (click)="reminder('save')"
+        [disabled]="busy() || !reminderTime"
+      >
+        {{ reminders.enabled() ? 'Update reminder' : 'Enable reminder' }}
+      </button>
+      <div class="log-actions">
+        <button
+          class="text-button"
+          (click)="reminder('test')"
+          [disabled]="busy()"
+        >
+          Test in 10 seconds</button
+        >@if (reminders.enabled()) {
+        <button
+          class="text-button"
+          (click)="reminder('off')"
+          [disabled]="busy()"
+        >
+          Turn off
+        </button>
+        }
+      </div>
+      } @else {
+      <div class="info-box">Requires the Android or iOS app.</div>
+      }
+    </section>
+    <section class="settings-card">
+      <span class="setting-icon"
+        ><ion-icon name="cloud-download-outline"
+      /></span>
+      <h2>Backup</h2>
+      <p>
+        Entries save automatically on this device. Restore adds missing entries
+        without replacing existing ones.
+      </p>
+      <p class="status">
+        <ion-icon name="checkmark-circle-outline" /> {{ sleep.entries().length
+        }} entries on this device
+      </p>
+      <button
+        class="secondary-button"
+        (click)="export()"
+        [disabled]="!sleep.ready()"
+      >
+        Export JSON backup</button
+      ><label class="file-button"
+        >Restore a backup<input
+          type="file"
+          accept="application/json,.json"
+          (change)="importBackup($event)"
+          [disabled]="busy() || !sleep.ready()"
+      /></label>
+      <p class="fine-print">
+        Clearing browser data or uninstalling the app can remove local entries.
+      </p>
+    </section>
+    }
+  </main>
 </ion-content>
+<ion-footer class="bottom-nav"
+  ><nav aria-label="Main navigation">
+    <button
+      [class.active]="tab() === 'today'"
+      [attr.aria-current]="tab() === 'today' ? 'page' : null"
+      (click)="tab.set('today')"
+    >
+      <ion-icon name="home-outline" /><span>Today</span></button
+    ><button
+      [class.active]="tab() === 'journal'"
+      [attr.aria-current]="tab() === 'journal' ? 'page' : null"
+      (click)="tab.set('journal')"
+    >
+      <ion-icon name="time-outline" /><span>Journal</span></button
+    ><button
+      [class.active]="tab() === 'settings'"
+      [attr.aria-current]="tab() === 'settings' ? 'page' : null"
+      (click)="settings()"
+    >
+      <ion-icon name="options-outline" /><span>Settings</span>
+    </button>
+  </nav></ion-footer
+>
+<ion-modal
+  [isOpen]="modal() !== null"
+  (didDismiss)="modal.set(null)"
+  [canDismiss]="!busy()"
+>
+  <ng-template>
+    <ion-header
+      ><ion-toolbar
+        ><ion-title
+          >{{ editing ? 'Edit entry' : modal() === 'night' ? 'Log a night' :
+          'Check-in' }}</ion-title
+        ><ion-buttons slot="end"
+          ><ion-button
+            aria-label="Close without saving"
+            (click)="modal.set(null)"
+            [disabled]="busy()"
+            ><ion-icon
+              name="close-outline" /></ion-button></ion-buttons></ion-toolbar
+    ></ion-header>
+    <ion-content
+      ><form class="entry-form" (ngSubmit)="save()">
+        @if (modal() === 'checkin') {
+        <h2>How awake do you feel?</h2>
+        } @if (modal() === 'night') {
+
+        <label for="bedtime">Bedtime</label
+        ><input
+          id="bedtime"
+          name="start"
+          type="datetime-local"
+          [(ngModel)]="start"
+          [max]="maxDate()"
+          required
+        /><label for="wake-up">Wake-up</label
+        ><input
+          id="wake-up"
+          name="end"
+          type="datetime-local"
+          [(ngModel)]="end"
+          [max]="maxDate()"
+          required
+        />
+        <div class="duration-preview">
+          <ion-icon name="moon-outline" /><span>Duration</span
+          ><strong>{{ preview() }}</strong>
+        </div>
+        } @else {
+
+        <fieldset class="scale-options">
+          <legend>Stanford Sleepiness Scale</legend>
+          @for (description of scales; track $index) {
+          <label class="scale-option" [class.chosen]="score === $index + 1"
+            ><input
+              type="radio"
+              name="score"
+              [value]="$index + 1"
+              [(ngModel)]="score"
+            /><span class="score-number">{{ $index + 1 }}</span
+            ><span
+              ><strong>{{ shortScales[$index] }}</strong
+              ><small>{{ description }}</small></span
+            ></label
+          >
+          }
+        </fieldset>
+        <label for="checkin-time">Date and time</label
+        ><input
+          id="checkin-time"
+          name="start"
+          type="datetime-local"
+          [(ngModel)]="start"
+          [max]="maxDate()"
+          required
+        />
+        }
+        <label for="note">Notes <span>(optional)</span></label
+        ><textarea
+          id="note"
+          name="note"
+          [(ngModel)]="note"
+          maxlength="500"
+          rows="3"
+          placeholder="e.g. Coffee before bed"
+        ></textarea>
+        @if (formError()) {
+        <p class="error" role="alert">{{ formError() }}</p>
+        }
+        <button
+          class="primary-button save-button"
+          type="submit"
+          [disabled]="busy() || !sleep.ready()"
+        >
+          {{ busy() ? 'Saving…' : editing ? 'Save changes' : modal() === 'night'
+          ? 'Save sleep' : 'Save check-in' }}<ion-icon
+            name="checkmark-circle-outline"
+          />
+        </button>
+        @if (editing) {
+        <button
+          class="delete-button"
+          type="button"
+          (click)="remove()"
+          [disabled]="busy()"
+        >
+          Delete entry
+        </button>
+        }
+      </form></ion-content
+    >
+  </ng-template>
+</ion-modal>

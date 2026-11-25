@@ -1,9 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'sleeptracker',
-  webDir: 'www'
+  appId: 'edu.uci.group48.drift',
+  appName: 'Drift',
+  webDir: 'www',
 };
 
 export default config;

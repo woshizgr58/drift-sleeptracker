@@ -1,15 +1,18 @@
 {
-  "name": "sleeptracker",
+  "name": "drift-sleeptracker",
   "version": "0.0.1",
-  "author": "Ionic Framework",
-  "homepage": "https://ionicframework.com/",
+  "author": "Kevin Zhong",
+  "homepage": "https://github.com/woshizgr58/drift-sleeptracker",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ESLINT_USE_FLAT_CONFIG=false ng lint",
+    "test:e2e": "playwright test",
+    "demo": "node scripts/record-demo.mjs",
+    "format": "prettier --write \"src/**/*.{ts,html,scss}\" \"e2e/**/*.ts\" \"scripts/*.mjs\" playwright.config.ts capacitor.config.ts"
   },
   "private": true,
   "dependencies": {
@@ -21,10 +24,13 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
+    "@capacitor/android": "^7.0.1",
     "@capacitor/app": "7.0.0",
     "@capacitor/core": "7.0.1",
     "@capacitor/haptics": "7.0.0",
     "@capacitor/keyboard": "7.0.0",
+    "@capacitor/local-notifications": "^7.0.0",
+    "@capacitor/preferences": "^7.0.0",
     "@capacitor/status-bar": "7.0.0",
     "@ionic/angular": "^8.0.0",
     "ionicons": "^7.0.0",
@@ -44,6 +50,7 @@
     "@angular/language-service": "^19.0.0",
     "@capacitor/cli": "7.0.1",
     "@ionic/angular-toolkit": "^12.0.0",
+    "@playwright/test": "^1.65.1",
     "@types/jasmine": "~5.1.0",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
@@ -58,7 +65,12 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "prettier": "^3.10.1",
     "typescript": "~5.6.3"
   },
-  "description": "An Ionic project"
+  "description": "A calm, local-first sleep and sleepiness journal",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/woshizgr58/drift-sleeptracker.git"
+  }
 }
