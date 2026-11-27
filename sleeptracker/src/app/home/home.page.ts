@@ -1,4 +1,6 @@
 import { Component, computed, effect, signal } from '@angular/core';
+import { AmplifyAuthenticatorModule } from '@aws-amplify/ui-angular';
+import { AuthService } from '../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -45,6 +47,7 @@ import { StanfordSleepinessData } from '../data/stanford-sleepiness-data';
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
   imports: [
+    AmplifyAuthenticatorModule,
     CommonModule,
     FormsModule,
     IonContent,
@@ -64,6 +67,7 @@ export class HomePage {
   modal = signal<'night' | 'checkin' | null>(null);
   busy = signal(false);
   formError = signal('');
+  authOpen = signal(false);
   editing: string | null = null;
   start = '';
   end = '';
@@ -130,6 +134,7 @@ export class HomePage {
       : '—';
 
   constructor(
+    public auth: AuthService,
     public sleep: SleepService,
     public reminders: ReminderService,
     private toasts: ToastController,
@@ -150,6 +155,13 @@ export class HomePage {
       chevronForwardOutline,
       leafOutline,
       shareOutline,
+    });
+    effect(() => {
+      if (this.auth.userId()) this.authOpen.set(false);
+      this.modal.set(null);
+    });
+    effect(() => {
+      this.goal = this.sleep.goal();
     });
     effect(() => {
       if (this.reminders.openCheckin()) {
@@ -241,10 +253,12 @@ export class HomePage {
             ? 'Sleep saved.'
             : 'Check-in saved.',
       );
-    } catch {
-      this.formError.set(
-        'Could not save. Your entry is still here; please try again.',
-      );
+    } catch (error) {
+      const detail =
+        error instanceof Error
+          ? error.message
+          : 'Check your connection and try again.';
+      this.formError.set(`Could not save: ${detail} Your entry is still here.`);
     } finally {
       this.busy.set(false);
     }
@@ -269,6 +283,7 @@ export class HomePage {
     }
   }
   async deleteConfirmed(entry: SleepEntry) {
+    const owner = this.auth.userId();
     this.busy.set(true);
     try {
       await this.sleep.remove(entry.id);
@@ -282,6 +297,10 @@ export class HomePage {
           {
             text: 'Undo',
             handler: () => {
+              if (owner !== this.auth.userId()) {
+                void this.toast('Sign in to the same account to undo.');
+                return;
+              }
               void this.sleep
                 .save(entry)
                 .catch(() => this.toast('Could not undo. Please try again.'));
@@ -312,7 +331,7 @@ export class HomePage {
   async saveGoal() {
     this.busy.set(true);
     try {
-      await this.sleep.commit(this.sleep.entries(), Number(this.goal));
+      await this.sleep.saveGoal(Number(this.goal));
       await this.toast('Sleep goal updated.');
     } catch {
       await this.toast('Could not save your goal. Try again.');
@@ -343,6 +362,40 @@ export class HomePage {
       this.busy.set(false);
     }
   }
+  async signOut() {
+    if (this.busy() || this.sleep.writing()) return;
+    this.busy.set(true);
+    try {
+      await this.auth.logout();
+    } catch {
+      await this.toast('Could not sign out. Try again.');
+    } finally {
+      this.busy.set(false);
+    }
+  }
+  async importDevice() {
+    const alert = await this.alerts.create({
+      header: 'Upload device entries?',
+      message: `Upload ${this.sleep.deviceCount()} device entries to ${this.auth.email()}? Existing cloud entries and the device copy will be kept.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Upload', role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    if ((await alert.onDidDismiss()).role !== 'confirm') return;
+    this.busy.set(true);
+    try {
+      await this.sleep.importDevice();
+      await this.toast('Device entries uploaded.');
+    } catch {
+      await this.toast(
+        'Upload failed. Check your connection and retry. Entries already uploaded were kept.',
+      );
+    } finally {
+      this.busy.set(false);
+    }
+  }
   export() {
     const url = URL.createObjectURL(
       new Blob([this.sleep.backup()], { type: 'application/json' }),
@@ -368,7 +421,7 @@ export class HomePage {
       await this.toast('Backup restored. Existing entries were kept.');
     } catch {
       await this.toast(
-        'Could not restore this file. Choose a valid Drift JSON backup.',
+        'Restore failed. Check the file and your connection. Entries already restored were kept; you can retry.',
       );
     } finally {
       this.busy.set(false);

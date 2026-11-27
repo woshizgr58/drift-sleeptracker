@@ -1,3 +1,4 @@
+@import "@aws-amplify/ui/styles.css";
 /*
  * App Global CSS
  * ----------------------------------------------------------------------------
@@ -42,4 +43,14 @@ ion-toast {
   --border-radius: 14px;
   --background: #294b40;
   --color: white;
+}
+
+[data-amplify-authenticator] {
+  --amplify-colors-brand-primary-80: #294b40;
+  --amplify-colors-brand-primary-90: #244238;
+  --amplify-colors-brand-primary-100: #203a31;
+  --amplify-colors-background-primary: #fffef9;
+  --amplify-radii-small: 10px;
+  --amplify-components-authenticator-router-box-shadow: none;
+  --amplify-components-authenticator-router-border-width: 0;
 }

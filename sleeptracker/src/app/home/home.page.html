@@ -6,7 +6,9 @@
         drift<span class="brand-dot">.</span></a
       >
     </header>
-    @if (sleep.error()) {
+    @if (auth.userId()) {
+    <p class="save-status" role="status">{{ sleep.status() }}</p>
+    } @if (sleep.error()) {
     <div class="error" role="alert">
       {{ sleep.error() }} <button (click)="sleep.load()">Retry</button>
     </div>
@@ -31,7 +33,7 @@
         <button
           class="light-button"
           (click)="open('night')"
-          [disabled]="!sleep.ready()"
+          [disabled]="!sleep.ready() || sleep.writing()"
         >
           <ion-icon name="add-outline" /> Log a night
           <ion-icon name="arrow-forward-outline" />
@@ -46,7 +48,7 @@
     <button
       class="checkin-card"
       (click)="open('checkin')"
-      [disabled]="!sleep.ready()"
+      [disabled]="!sleep.ready() || sleep.writing()"
     >
       <span class="sun-icon"><ion-icon name="sunny-outline" /></span
       ><span><strong>How awake do you feel?</strong></span
@@ -126,13 +128,13 @@
       <button
         class="primary-button"
         (click)="open('night')"
-        [disabled]="!sleep.ready()"
+        [disabled]="!sleep.ready() || sleep.writing()"
       >
         <ion-icon name="add-outline" /> Log a night</button
       ><button
         class="secondary-button"
         (click)="open('checkin')"
-        [disabled]="!sleep.ready()"
+        [disabled]="!sleep.ready() || sleep.writing()"
       >
         <ion-icon name="sunny-outline" /> Check in
       </button>
@@ -198,6 +200,57 @@
       <h1>Settings</h1>
     </section>
     <section class="settings-card">
+      <h2>Account</h2>
+      @if (auth.userId()) {
+      <p class="account-email">{{ auth.email() }}</p>
+      <p role="status">{{ sleep.status() }}</p>
+      <p>
+        Cloud saves require an internet connection. Refresh to load changes from
+        another device.
+      </p>
+      <button
+        class="secondary-button"
+        (click)="sleep.load()"
+        [disabled]="busy() || sleep.writing()"
+      >
+        Refresh cloud journal
+      </button>
+      @if (sleep.deviceCount()) {
+      <button
+        class="secondary-button"
+        (click)="importDevice()"
+        [disabled]="busy() || !sleep.ready() || sleep.writing()"
+      >
+        Upload device entries ({{ sleep.deviceCount() }})
+      </button>
+      }
+      <button
+        class="text-button"
+        (click)="signOut()"
+        [disabled]="busy() || sleep.writing()"
+      >
+        Sign out
+      </button>
+      } @else if (auth.configured) {
+      <p>
+        Sign in to save entries to your account and access them on another
+        device. Device entries stay local unless you choose to upload them.
+      </p>
+      <button
+        class="primary-button"
+        (click)="authOpen.set(true)"
+        [disabled]="busy() || sleep.writing() || !auth.initialized()"
+      >
+        Sign in or create account
+      </button>
+      } @else {
+      <p>
+        Device-only mode. Cloud sign-in is available after an AWS backend is
+        configured.
+      </p>
+      }
+    </section>
+    <section class="settings-card">
       <span class="setting-icon"><ion-icon name="moon-outline" /></span>
       <h2>Sleep goal</h2>
 
@@ -209,7 +262,7 @@
       ><button
         class="primary-button"
         (click)="saveGoal()"
-        [disabled]="busy() || !sleep.ready()"
+        [disabled]="busy() || !sleep.ready() || sleep.writing()"
       >
         Save goal
       </button>
@@ -265,17 +318,18 @@
       /></span>
       <h2>Backup</h2>
       <p>
-        Entries save automatically on this device. Restore adds missing entries
-        without replacing existing ones.
+        {{ auth.userId() ? 'Entries save to your cloud account.' : 'Entries save
+        automatically on this device.' }} Restore adds missing entries without
+        replacing existing ones.
       </p>
       <p class="status">
         <ion-icon name="checkmark-circle-outline" /> {{ sleep.entries().length
-        }} entries on this device
+        }} entries {{ auth.userId() ? 'in your account' : 'on this device' }}
       </p>
       <button
         class="secondary-button"
         (click)="export()"
-        [disabled]="!sleep.ready()"
+        [disabled]="!sleep.ready() || sleep.writing()"
       >
         Export JSON backup</button
       ><label class="file-button"
@@ -283,7 +337,7 @@
           type="file"
           accept="application/json,.json"
           (change)="importBackup($event)"
-          [disabled]="busy() || !sleep.ready()"
+          [disabled]="busy() || !sleep.ready() || sleep.writing()"
       /></label>
       <p class="fine-print">
         Clearing browser data or uninstalling the app can remove local entries.
@@ -405,7 +459,7 @@
         <button
           class="primary-button save-button"
           type="submit"
-          [disabled]="busy() || !sleep.ready()"
+          [disabled]="busy() || !sleep.ready() || sleep.writing()"
         >
           {{ busy() ? 'Saving…' : editing ? 'Save changes' : modal() === 'night'
           ? 'Save sleep' : 'Save check-in' }}<ion-icon
@@ -423,6 +477,28 @@
         </button>
         }
       </form></ion-content
+    >
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="authOpen()" (didDismiss)="authOpen.set(false)">
+  <ng-template>
+    <ion-header
+      ><ion-toolbar
+        ><ion-title>Account</ion-title
+        ><ion-buttons slot="end"
+          ><ion-button aria-label="Close sign-in" (click)="authOpen.set(false)"
+            ><ion-icon
+              name="close-outline" /></ion-button></ion-buttons></ion-toolbar
+    ></ion-header>
+    <ion-content
+      ><div class="auth-panel">
+        <amplify-authenticator [loginMechanisms]="['email']"
+          ><ng-template amplifySlot="authenticated"
+            ><p>Signed in. Loading your journal…</p></ng-template
+          ></amplify-authenticator
+        >
+      </div></ion-content
     >
   </ng-template>
 </ion-modal>

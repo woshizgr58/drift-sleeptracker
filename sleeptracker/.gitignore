@@ -71,3 +71,10 @@ Thumbs.db
 
 /test-results/
 /playwright-report/
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*
+
+/src/assets/amplify_outputs.json

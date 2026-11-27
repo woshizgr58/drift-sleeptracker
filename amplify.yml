@@ -1,0 +1,23 @@
+version: 1
+applications:
+  - appRoot: sleeptracker
+    backend:
+      phases:
+        build:
+          commands:
+            - nvm install 22
+            - nvm use 22
+            - npm ci --cache .npm --prefer-offline
+            - npx ampx pipeline-deploy --branch "$AWS_BRANCH" --app-id "$AWS_APP_ID"
+    frontend:
+      phases:
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: www
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - .npm/**/*
