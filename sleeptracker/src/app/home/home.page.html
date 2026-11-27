@@ -1,5 +1,5 @@
 <ion-content>
-  <main class="shell">
+  <main class="shell" [class.overview]="tab() === 'today'">
     <header class="brand">
       <a href="/home" aria-label="Drift home"
         ><span class="brand-mark"><ion-icon name="moon-outline" /></span>
@@ -28,80 +28,85 @@
       <p class="eyebrow">{{ today | date:'EEEE, MMMM d' }}</p>
       <h1>Sleep overview</h1>
     </section>
-    <section class="night-card" aria-label="Latest overnight sleep">
-      <div class="night-copy">
-        <p class="eyebrow">
-          <ion-icon name="moon-outline" /> {{ latest() ? 'LATEST NIGHT' :
-          'OVERNIGHT SLEEP' }}
-        </p>
-        <h2>{{ latest() ? hours(duration(latest()!)) : 'No sleep logged' }}</h2>
-        <p>
-          {{ latest() ? (latest()!.end | date:'EEE, MMM d') + ' · ' + 'Goal: ' +
-          sleep.goal() + 'h' : 'Add your bedtime and wake-up time.' }}
-        </p>
-        <button
-          class="light-button"
-          (click)="open('night')"
-          [disabled]="!sleep.ready() || sleep.writing()"
-        >
-          <ion-icon name="add-outline" /> Log a night
-          <ion-icon name="arrow-forward-outline" />
-        </button>
-      </div>
-      <div class="moon-scene" aria-hidden="true">
-        <span class="star s1">✦</span><span class="star s2">✧</span
-        ><span class="star s3">·</span><span class="moon"></span
-        ><span class="orbit"></span>
-      </div>
-    </section>
-    <button
-      class="checkin-card"
-      (click)="open('checkin')"
-      [disabled]="!sleep.ready() || sleep.writing()"
-    >
-      <span class="sun-icon"><ion-icon name="sunny-outline" /></span
-      ><span><strong>How awake do you feel?</strong></span
-      ><ion-icon name="arrow-forward-outline" />
-    </button>
-    <section class="week-card">
-      <div class="section-title">
-        <div>
-          <h2>This week</h2>
-        </div>
-        <span class="pill">Last 7 days</span>
-      </div>
-      <div class="week-stats">
-        <strong
-          >{{ average() ? hours(average()) : '—' }}<small
-            >average per logged day</small
-          ></strong
-        ><span>{{ daysLogged() }}<small>of 7 days logged</small></span>
-      </div>
-      <div
-        class="chart"
-        role="img"
-        aria-label="Sleep duration for each of the last seven days"
-      >
-        @for (day of week(); track $index) {
-        <div
-          class="chart-column"
-          [attr.aria-label]="day.date + ': ' + (day.hasData ? hours(day.hours) : 'not logged')"
-        >
-          <span class="chart-value"
-            >{{ day.hasData ? (day.hours | number:'1.0-1') + 'h' : '·' }}</span
+    <div class="overview-grid">
+      <section class="night-card" aria-label="Latest overnight sleep">
+        <div class="night-copy">
+          <p class="eyebrow">
+            <ion-icon name="moon-outline" /> {{ latest() ? 'LATEST NIGHT' :
+            'OVERNIGHT SLEEP' }}
+          </p>
+          <h2>
+            {{ latest() ? hours(duration(latest()!)) : 'No sleep logged' }}
+          </h2>
+          <p>
+            {{ latest() ? (latest()!.end | date:'EEE, MMM d') + ' · ' + 'Goal: '
+            + sleep.goal() + 'h' : 'Add your bedtime and wake-up time.' }}
+          </p>
+          <button
+            class="light-button"
+            (click)="open('night')"
+            [disabled]="!sleep.ready() || sleep.writing()"
           >
-          <div class="bar-track">
-            <div
-              class="bar"
-              [class.current]="$last"
-              [style.height.%]="day.hasData ? (day.hours / 24 * 100) : 4"
-            ></div>
-          </div>
-          <span class="day" [class.current-day]="$last">{{ day.label }}</span>
+            <ion-icon name="add-outline" /> Log a night
+            <ion-icon name="arrow-forward-outline" />
+          </button>
         </div>
-        }
-      </div>
-    </section>
+        <div class="moon-scene" aria-hidden="true">
+          <span class="star s1">✦</span><span class="star s2">✧</span
+          ><span class="star s3">·</span><span class="moon"></span
+          ><span class="orbit"></span>
+        </div>
+      </section>
+      <button
+        class="checkin-card"
+        (click)="open('checkin')"
+        [disabled]="!sleep.ready() || sleep.writing()"
+      >
+        <span class="sun-icon"><ion-icon name="sunny-outline" /></span
+        ><span><strong>How awake do you feel?</strong></span
+        ><ion-icon name="arrow-forward-outline" />
+      </button>
+      <section class="week-card">
+        <div class="section-title">
+          <div>
+            <h2>This week</h2>
+          </div>
+          <span class="pill">Last 7 days</span>
+        </div>
+        <div class="week-stats">
+          <strong
+            >{{ average() ? hours(average()) : '—' }}<small
+              >average per logged day</small
+            ></strong
+          ><span>{{ daysLogged() }}<small>of 7 days logged</small></span>
+        </div>
+        <div
+          class="chart"
+          role="img"
+          aria-label="Sleep duration for each of the last seven days"
+        >
+          @for (day of week(); track $index) {
+          <div
+            class="chart-column"
+            [attr.aria-label]="day.date + ': ' + (day.hasData ? hours(day.hours) : 'not logged')"
+          >
+            <span class="chart-value"
+              >{{ day.hasData ? (day.hours | number:'1.0-1') + 'h' : '·'
+              }}</span
+            >
+            <div class="bar-track">
+              <div
+                class="bar"
+                [class.current]="$last"
+                [style.height.%]="day.hasData ? (day.hours / 24 * 100) : 4"
+              ></div>
+            </div>
+            <span class="day" [class.current-day]="$last">{{ day.label }}</span>
+          </div>
+          }
+        </div>
+      </section>
+    </div>
     <div class="section-title recent-heading">
       <h2>Recent entries</h2>
       <button class="text-button" (click)="tab.set('journal')">

@@ -811,3 +811,82 @@ textarea {
   margin-bottom: 22px;
   font-size: 12px;
 }
+
+// Use desktop space for a dashboard while retaining the stacked phone layout.
+@media (min-width: 960px) {
+  .shell {
+    max-width: 940px;
+    padding: 40px 48px 48px;
+  }
+  .shell.overview {
+    max-width: 1200px;
+  }
+  .brand {
+    margin-bottom: 44px;
+  }
+  .account-button {
+    max-width: none;
+    font-size: 14px;
+    padding-inline: 18px;
+  }
+  .overview-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "night week" "checkin week";
+    gap: 20px 28px;
+  }
+  .night-card {
+    grid-area: night;
+    min-height: 260px;
+  }
+  .checkin-card {
+    grid-area: checkin;
+    margin: 0;
+    min-height: 88px;
+  }
+  .week-card {
+    grid-area: week;
+    padding: 30px;
+  }
+  .week-stats {
+    margin-block: 30px 24px;
+  }
+  .chart .bar-track {
+    height: 155px;
+  }
+  .night-card p:not(.eyebrow),
+  .checkin-card small,
+  .entry-text small,
+  .settings-card p,
+  .scale-detail,
+  .note {
+    font-size: 14px;
+  }
+  .entry-text strong,
+  .checkin-card strong {
+    font-size: 16px;
+  }
+  .chart-value,
+  .day,
+  .week-stats small,
+  .pill {
+    font-size: 12px;
+  }
+  .recent-heading {
+    margin-top: 36px;
+  }
+  .bottom-nav nav {
+    max-width: 650px;
+  }
+  .bottom-nav button {
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    min-height: 64px;
+    font-size: 14px;
+  }
+  .bottom-nav .active ion-icon {
+    padding: 6px 12px;
+    margin: 0;
+  }
+}
