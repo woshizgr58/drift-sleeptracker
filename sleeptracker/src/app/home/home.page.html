@@ -5,6 +5,15 @@
         ><span class="brand-mark"><ion-icon name="moon-outline" /></span>
         drift<span class="brand-dot">.</span></a
       >
+      @if (auth.configured) {
+      <button
+        class="account-button"
+        (click)="auth.userId() ? tab.set('settings') : authOpen.set(true)"
+        [disabled]="busy() || sleep.writing() || !auth.initialized()"
+      >
+        {{ auth.userId() ? 'Account' : 'Sign in / Create account' }}
+      </button>
+      }
     </header>
     @if (auth.userId()) {
     <p class="save-status" role="status">{{ sleep.status() }}</p>

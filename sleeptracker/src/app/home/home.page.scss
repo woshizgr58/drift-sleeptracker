@@ -12,9 +12,25 @@ ion-content {
 }
 .brand {
   display: flex;
+  gap: 16px;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 38px;
+}
+.account-button {
+  min-height: 44px;
+  max-width: 160px;
+  padding: 8px 12px;
+  border: 1px solid #d6dece;
+  border-radius: 14px;
+  background: #e8ede1;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.account-button:hover:not(:disabled) {
+  background: #dce5d3;
 }
 .brand a {
   display: flex;
